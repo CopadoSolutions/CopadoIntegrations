@@ -21,5 +21,6 @@ By default the following fields get imported:
 To install the application clic
 
 # Customisation
+In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
 
 
