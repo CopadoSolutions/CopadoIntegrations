@@ -41,7 +41,7 @@ This is done from the "Change Management Integrations" tab.
 
 Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields.
 
-## Page Layout modifiecations
+## Page Layout modifications
 
 ### Fields
 - Change Management Integration - This lookup field looks up the credential you just created.
