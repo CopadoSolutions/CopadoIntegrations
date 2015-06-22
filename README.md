@@ -26,10 +26,14 @@ To install the application use one of the below URLs.
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
 
 # Getting started
+1) The User Story Status picklist values should match those of your external system. 
+2) The JIRA remote site setting contains a domain that needs to be changed. 
+3) Page layout modifications (see below) 
+
 Once the package is installed, you will need to setup a Change Management Integration Credential.
 This is done from the "Change Management Integrations" tab.
-- A Jira endpoint might look as follows: https://<COMPANAY DOMAIN NAME>.atlassian.net/rest/api/2/
-- A VersionOne endpoint might look as follows: https://www9.v1host.com/<COMPANDY NAME>/
+- A Jira endpoint might look as follows: https://COMPANAY_DOMAIN_NAME.atlassian.net/rest/api/2/
+- A VersionOne endpoint might look as follows: https://www9.v1host.com/COMPANY_NAME/
 - A Rally endpoint might look as follows: https://rally1.rallydev.com/slm/webservice/v2.0/
 
 Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields.
@@ -43,11 +47,8 @@ Once the integration credentials have been setup, you will need to create a new 
 ### Buttons
 - Add button called, "Sync External User Stories" to the project layout.
 
+## Remote Sites Settings
+Some Remote Sites settings have been included for your convenience.  The Jira Remote Sites settings currently point to a repository called, "copado-test2".  This will need to be changed.
+You may delete the remote sites settings that you will not need.
 
 Once everything is setup, you can press the "Sync External User Stories" button.
-
-# Required customisations to get started
-1) The User Story Status picklist values should match those of your external system.
-2) The JIRA remote site setting contains a domain that needs to be changed.
-
-
