@@ -1,7 +1,7 @@
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
-The latest version supports JIRA, Version One and Rally.
+The latest version supports JIRA, VersionOne and Rally.
 
 # How does it work?
 Copado Solutions has built the authentication module as well as the framework for retrieving user stories and inserting these into the Copado sObject called, "User Story".  The mapping is also handled by the integration.  Both the data being queried from the data source as well as the mapping can be modified.  We have commented the code with instructions to help with the customisation process.
@@ -18,7 +18,9 @@ By default the following fields get imported:
 - Functional Specifications (Functional_Specifications__c)
 
 # Installation instructions
-To install the application clic
+To install the application use one of the below URLs.
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t240000009XQb
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t240000009XQb
 
 # Customisation
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
