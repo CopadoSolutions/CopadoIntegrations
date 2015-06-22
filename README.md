@@ -26,9 +26,12 @@ To install the application use one of the below URLs.
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
 
 # Getting started
-1) The User Story Status picklist values should match those of your external system. 
+1) The User Story Status picklist values should match those of your external system.
+
 2) The JIRA remote site setting contains a domain that needs to be changed. 
+
 3) Page layout modifications (see below) 
+
 
 Once the package is installed, you will need to setup a Change Management Integration Credential.
 This is done from the "Change Management Integrations" tab.
