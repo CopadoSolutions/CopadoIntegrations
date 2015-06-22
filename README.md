@@ -32,9 +32,17 @@ This is done from the "Change Management Integrations" tab.
 - A VersionOne endpoint might look as follows: https://www9.v1host.com/<COMPANDY NAME>/
 - A Rally endpoint might look as follows: https://rally1.rallydev.com/slm/webservice/v2.0/
 
-Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields. NOTE if they are not in the page layout you will need to add them to the layout(s).
+Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields.
+
+## Page Layout modifiecations
+
+### Fields
 - Change Management Integration - This lookup field looks up the credential you just created.
 - External Id - This external Id field needs the Id of the project for which we will import the User Stories.
+
+### Buttons
+- Add button called, "Sync External User Stories" to the project layout.
+
 
 Once everything is setup, you can press the "Sync External User Stories" button.
 
