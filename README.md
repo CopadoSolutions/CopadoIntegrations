@@ -38,6 +38,8 @@ Once the integration credentials have been setup, you will need to create a new 
 
 Once everything is setup, you can press the "Sync External User Stories" button.
 
-We recommend that the User Story Status picklist values match that of your external system.
+# Required customisations to get started
+1) The User Story Status picklist values should match those of your external system.
+2) The JIRA remote site setting contains a domain that needs to be changed.
 
 
