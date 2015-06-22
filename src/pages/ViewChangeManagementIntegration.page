@@ -1,0 +1,25 @@
+<apex:page standardController="Change_Management_Integration_Credential__c" id="thePage">
+    <apex:form id="theForm">
+    	<apex:sectionHeader id="theHeader" title="Copado {!$ObjectType.Change_Management_Integration_Credential__c.Label}" subtitle="{!Change_Management_Integration_Credential__c.Name}"/>
+		<apex:pageMessages id="theMessages" />
+
+		<apex:pageBlock id="pb_viewCredentials"  mode="view" >
+			<apex:pageblockButtons id="buttons">
+                <apex:commandButton id="btnEdit" value="{!$Label.site.edit}" action="{!edit}" />
+                <apex:commandButton id="btnDelete" value="Delete" action="{!delete}" onclick="if(!confirm('Are you sure?')){return false;};" />
+                <apex:commandButton id="btnShare" value="Share" action="{!URLFOR($Action.Change_Management_Integration_Credential__c.Share,Change_Management_Integration_Credential__c.id)}"/>
+            </apex:pageblockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:outputField id="of_Name" value="{!Change_Management_Integration_Credential__c.Name}" />
+                <apex:outputField id="of_AuthMethod" value="{!Change_Management_Integration_Credential__c.Authentication_Method__c }" />
+                <apex:outputField id="of_ExternalSystem" value="{!Change_Management_Integration_Credential__c.External_System__c }" />
+                <apex:outputField id="of_Username" value="{!Change_Management_Integration_Credential__c.Username__c  }" />
+                <apex:pageBlockSectionItem >
+					<apex:outputLabel value="Password" />
+				    <apex:outputText id="ot_Password" value="*********"/>
+				</apex:pageBlockSectionItem>
+                <apex:outputField id="of_Endpoint" value="{!Change_Management_Integration_Credential__c.Endpoint__c }" />
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+     </apex:form>
+</apex:page>

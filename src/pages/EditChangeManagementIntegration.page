@@ -1,0 +1,26 @@
+<apex:page standardController="Change_Management_Integration_Credential__c" id="thePage">
+    <apex:form id="theForm">
+    	<apex:sectionHeader id="theHeader" title="{!$ObjectType.Change_Management_Integration_Credential__c.Label}" subtitle="{!Change_Management_Integration_Credential__c.Name}"/>
+		<apex:pageMessages id="theMessages"/>
+		<apex:pageBlock id="pb_editCredentials"  mode="edit" >
+			<apex:pageblockButtons id="buttons">
+                <apex:commandButton id="btnSave" value="{!$Label.site.save}" styleClass="btnImportant" action="{!save}" />
+                <apex:commandButton id="btnCancel" value="{!$Label.site.cancel}" action="{!cancel}" />
+            </apex:pageblockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:inputField id="if_Name" value="{!Change_Management_Integration_Credential__c.Name}" />
+                <apex:inputField id="if_AuthMethod" value="{!Change_Management_Integration_Credential__c.Authentication_Method__c }" />
+                <apex:inputField id="if_ExternalSystem" value="{!Change_Management_Integration_Credential__c.External_System__c }" />
+                <apex:inputField id="if_Username" value="{!Change_Management_Integration_Credential__c.Username__c  }" />
+                <apex:pageBlockSectionItem >
+			  		<apex:outputLabel value="Password" />
+			  		<apex:outputPanel styleClass="requiredInput" layout="block">
+		    			<apex:outputPanel styleClass="requiredBlock" layout="block" />
+			    		<apex:inputSecret id="is_Password" value="{!Change_Management_Integration_Credential__c.Password__c}" required="true"  />
+			  		</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+                <apex:inputField id="if_Endpoint" value="{!Change_Management_Integration_Credential__c.Endpoint__c }" />
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+     </apex:form>
+</apex:page>
