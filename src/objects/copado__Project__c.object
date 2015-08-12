@@ -1,5 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
+    <description>Overall object for capturing the project details.</description>
+    <enableActivities>true</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
     <fields>
         <fullName>Change_Management_Integration__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
@@ -26,13 +82,116 @@
         <type>Text</type>
         <unique>true</unique>
     </fields>
+    <fields>
+        <fullName>copado__Deployment_Flow__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Deployment Flow</label>
+        <referenceTo>copado__Deployment_Flow__c</referenceTo>
+        <relationshipLabel>Projects</relationshipLabel>
+        <relationshipName>Projects</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>copado__Description__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Description</label>
+        <length>32768</length>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>copado__End_Date__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>End Date</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>copado__Start_Date__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Start Date</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>copado__Status__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Status</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Draft</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Planned</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>In progress</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Completed</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
     <label>Project</label>
+    <listViews>
+        <fullName>copado__All</fullName>
+        <columns>NAME</columns>
+        <columns>copado__Start_Date__c</columns>
+        <columns>copado__End_Date__c</columns>
+        <columns>copado__Status__c</columns>
+        <columns>copado__Deployment_Flow__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+        <language>en_US</language>
+    </listViews>
     <nameField>
         <label>Project Name</label>
         <trackHistory>false</trackHistory>
         <type>Text</type>
     </nameField>
     <pluralLabel>Projects</pluralLabel>
+    <searchLayouts>
+        <customTabListAdditionalFields>copado__Start_Date__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>copado__End_Date__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>copado__Status__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>copado__Deployment_Flow__c</customTabListAdditionalFields>
+        <lookupDialogsAdditionalFields>copado__Start_Date__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>copado__End_Date__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>copado__Status__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>copado__Deployment_Flow__c</lookupDialogsAdditionalFields>
+        <searchFilterFields>NAME</searchFilterFields>
+        <searchFilterFields>copado__Start_Date__c</searchFilterFields>
+        <searchFilterFields>copado__End_Date__c</searchFilterFields>
+        <searchFilterFields>copado__Status__c</searchFilterFields>
+        <searchFilterFields>copado__Deployment_Flow__c</searchFilterFields>
+        <searchResultsAdditionalFields>copado__Start_Date__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>copado__End_Date__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>copado__Status__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>copado__Deployment_Flow__c</searchResultsAdditionalFields>
+    </searchLayouts>
     <sharingModel>ReadWrite</sharingModel>
     <webLinks>
         <fullName>Sync_External_User_Stories</fullName>
@@ -271,7 +430,8 @@ var copadoVersionOneAdapter = {
      * @return {[type]}         [description]
      */
     onFailure : function(res, request) {
-
+        console.debug(&apos;failure res: &apos;, res);
+        console.debug(&apos;failure request: &apos;, request);
         var app = this.controller; 
 
         if(request.status == 401){
@@ -293,6 +453,8 @@ var copadoVersionOneAdapter = {
      * @return {[type]}     [description]
      */
     getIssueList : function(res){
+        console.debug(&apos;getIssueList &apos;, res);
+        console.debug(&apos;getIssueList res[0] &apos;, res[0]);
         return res[0];
     },
     /**
@@ -303,8 +465,9 @@ var copadoVersionOneAdapter = {
      * @return {[type]}     [description]
      */
     getCopadoUserStoryFromAPIObject : function(obj){
-
+            console.debug(&apos;getCopadoUserStoryFromAPIObject obj &apos;, obj);
             var app = this.controller;    
+            console.debug(&apos;app.conf &apos;, app.conf);
 
             //create the SObject instance
             var us = new sforce.SObject(app.conf.ns+&apos;User_Story__c&apos;);
@@ -316,6 +479,7 @@ var copadoVersionOneAdapter = {
             us[app.conf.ns+&apos;Status__c&apos;] = obj[&apos;Status.Name&apos;];
             us[app.conf.ns+&apos;Project__c&apos;] = app.data.projectId;
             us[app.conf.ns+&apos;Functional_Specifications__c&apos;] = obj.Description;
+            console.debug(&apos;getCopadoUserStoryFromAPIObject us &apos;, us);
             return us;     
     }    
 
@@ -579,13 +743,27 @@ var app = {
                 obj &amp;&amp; records.push(obj);
             }
 
-            //console.log(records) 
+            console.log(records);
         
             if(records.length){
                 // this will insert or update a Issue or User Story
                 var result = sforce.connection.upsert(&apos;External_Id__c&apos;, records);
-                alert(app.labels.SUCCESS_SYNC);
-                location.reload();
+                console.log(&apos;upsert result: &apos;, result);
+                var errors = &quot;&quot;;
+                for (var i=0; i&lt;result.length; i++) {
+                  if (!result[i].getBoolean(&quot;success&quot;)) {
+                    errors += result[i].errors.message +&quot;\n&quot;;
+                  }
+                }
+                if(errors == &quot;&quot;){
+                  alert(app.labels.SUCCESS_SYNC);
+                  location.reload();
+                }
+                else{
+                  alert(errors);
+                  app.hideScreenLocker();
+                }
+
             }else{
                 alert(app.labels.EMPTY_SYNC);
                 app.hideScreenLocker();
