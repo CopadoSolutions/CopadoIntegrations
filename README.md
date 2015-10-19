@@ -19,8 +19,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t240000009XZG
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t240000009XZG
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t240000009q5w
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t240000009q5w
 
 # Customisation
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
