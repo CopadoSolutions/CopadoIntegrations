@@ -44,7 +44,6 @@
         <actionName>View</actionName>
         <type>Default</type>
     </actionOverrides>
-    <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <deprecated>false</deprecated>
@@ -410,7 +409,7 @@ var copadoVersionOneAdapter = {
         var app = this.controller;
         return {
             &quot;Content-Type&quot;: &quot;application/json&quot;,
-            &quot;Authorization&quot;: app.makeBasicAuthenticationHeader(app.data.credential.username,app.data.credential.password),
+            &quot;Authorization&quot;: (app.data.credential.method==&apos;Authentication Token&apos;)?app.makeAuthenticationTokenHeader(app.data.credential.password):app.makeBasicAuthenticationHeader(app.data.credential.username,app.data.credential.password),
             &quot;Accept&quot;: &quot;haljson&quot;,
             &quot;dataType&quot;: &quot;json&quot;
         };
@@ -504,7 +503,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} projectExternalId [description]
      * @return {[type]}                   [description]
      */
-     getUrl : function(projectExternalId){
+    getUrl : function(projectExternalId){
         var app = this.controller;
         var query = &apos;(Project.ObjectID = &quot;&apos;+projectExternalId+&apos;&quot;)&apos;;
         var url = app.data.credential.endpoint +&apos;hierarchicalrequirement?query=&apos;+encodeURIComponent(query)+&apos;&amp;fetch=true&apos;;
@@ -517,7 +516,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} request [description]
      * @return {[type]}         [description]
      */
-     onFailure : function(res, request) {
+    onFailure : function(res, request) {
         var app = this.controller; 
 
         console.error(res, request);
@@ -647,7 +646,7 @@ var app = {
         
         var query = &apos;SELECT Username__c, Password__c, Endpoint__c, Authentication_Method__c,External_System__c FROM &apos;+app.conf.CREDENTIAL_SFDC_OBJECT+&apos; WHERE Id=\&apos;&apos;+credentialId+&apos;\&apos; LIMIT 1&apos;;
 
-        console.log(&apos;Getting credentials...&apos;)
+        console.log(&apos;Getting credentials...&apos;);
         try{
             var records = sforce.connection.query(query).getArray(&apos;records&apos;); 
             if(records == null || records.length == 0){ 
@@ -670,7 +669,6 @@ var app = {
             console.error(e);
             app.hideScreenLocker();
         }
-        
     },
 
     /**
@@ -684,17 +682,16 @@ var app = {
      * @return {[type]}                   [description]
      */
     retrieveFromPMAPI: function(projectExternalId){
-        console.log(&apos;Retrieving from PM API&apos;)
-    
+        console.log(&apos;Retrieving from PM API&apos;);
+
         // use sforce proxy to access 
         sforce.connection.remoteFunction({
-           url : app.adapter.getUrl(projectExternalId) ,
-           requestHeaders: app.adapter.getHeaders(),
-           method: app.adapter.getMethod(),
-           requestData: app.adapter.getBody(),
+            url : app.adapter.getUrl(projectExternalId),
+            requestHeaders: app.adapter.getHeaders(),
+            method: app.adapter.getMethod(),
+            requestData: app.adapter.getBody(),
 
-           onSuccess : function(res) {
-                //console.info(&apos;RESULT: &apos;, res);
+            onSuccess : function(res) {
                 try{
                     res = app.adapter.parseAPIResponse(res);
                 }catch(e){
@@ -703,19 +700,15 @@ var app = {
                     return;
                 }
                 app.convertToCopadoUserStory(res);
-                
-           },
+            },
 
-           onFailure : function(res, request) {
-
-             console.error(res, request);
-             app.adapter.onFailure(res,request)
-             app.hideScreenLocker();
-             
-           },
-           timeout: 25000
+            onFailure : function(res, request) {
+                console.error(res, request);
+                app.adapter.onFailure(res,request);
+                app.hideScreenLocker();
+            },
+            timeout: 25000
         });
-
     },
 
     /**
@@ -726,6 +719,15 @@ var app = {
      */
     makeBasicAuthenticationHeader: function(user,pass){
         return &apos;Basic &apos;+ Base64.encode(user +&apos;:&apos;+pass);
+    },
+
+    /**
+     * Generic helper to handle authentication tokens
+     * @param  {[type]} pass [description]
+     * @return {[type]}      [description]
+     */
+    makeAuthenticationTokenHeader: function(pass){
+        return &apos;Bearer&apos;+ pass;
     },
 
     /**
