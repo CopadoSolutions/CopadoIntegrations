@@ -44,6 +44,7 @@
         <actionName>View</actionName>
         <type>Default</type>
     </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <deprecated>false</deprecated>
@@ -506,7 +507,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
     getUrl : function(projectExternalId){
         var app = this.controller;
         var query = &apos;(Project.ObjectID = &quot;&apos;+projectExternalId+&apos;&quot;)&apos;;
-        var url = app.data.credential.endpoint +&apos;hierarchicalrequirement?query=&apos;+encodeURIComponent(query)+&apos;&amp;fetch=true&apos;;
+        var url = app.data.credential.endpoint +&apos;hierarchicalrequirement?query=&apos;+encodeURIComponent(query)+&apos;&amp;fetch=true&amp;pagesize=200&apos;;
         console.debug(&apos;Calling url: &apos;, url);
         return url;
     },
