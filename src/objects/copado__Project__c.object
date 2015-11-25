@@ -54,6 +54,7 @@
     <enableFeeds>false</enableFeeds>
     <enableHistory>true</enableHistory>
     <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <fields>
@@ -359,6 +360,122 @@ var copadoJIRAAdapter = {
 
 };
 
+/**************************************************************************************************************
+ * Copado Agile Accelerator Adapter
+ * 
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories (Work Items) into Copado User Stories
+ *
+ * If you want to write your custom adapter, you will only have to extend this object and overide the methods you need.
+ * @type {Object}
+ */
+var copadoAAAdapter = {
+
+    /**
+     * This method should return the body data to send in POST messages. 
+     * @return {[type]} [description]
+     */
+    getBody: function(){ return {} },
+
+    /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce &gt; Setup &gt; Remote Sites
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +&apos;/services/data/v34.0/query?q=SELECT+Id,Name,+agf__Subject__c,+agf__Description__c,+agf__Status__c,+agf__Type__c+FROM+agf__ADM_Work__c+WHERE+agf__Product_Tag__r.Name+=+\&apos;&apos;+encodeURIComponent(projectExternalId) +&apos;\&apos;&apos;;
+        console.debug(&apos;Calling url: &apos;, url);
+        return url;
+    },
+
+    /**
+     * This method returns the request method for the adapter
+     * @return {[type]} [description]
+     */
+    getMethod: function(){
+        return &apos;GET&apos;;
+    },
+    /**
+     * Should return the request header
+     * You have to override this method if you need to change from Basic Authentication to other type, 
+     * or if you need to add additional headers
+     * @return {[type]} [description]
+     */
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+           &quot;Content-Type&quot;: &quot;application/json&quot;,
+           &quot;Authorization&quot;: &quot;Bearer {!$Api.Session_ID}&quot;
+        };
+    },
+    /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    parseAPIResponse: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+
+        var app = this.controller; 
+        console.error(res, request);
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            try{
+                //try to parse and show the remote error
+                res = JSON.parse(res);    
+            }catch(e){ res = false;}
+            var app = this.controller;
+            alert(res&amp;&amp;res.errorMessages&amp;&amp;res.errorMessages.length&amp;&amp;res.errorMessages[0]||app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+        }     
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        return res.records;
+    },
+    /**
+     * FIELD MAPPINGS - JIRA
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+
+        var app = this.controller;    
+
+        //Create the SObject instance
+        var us = new sforce.SObject(app.conf.ns+&apos;User_Story__c&apos;);
+        //set the external Id
+        us.External_Id__c = obj.Name;        
+
+        //set the fields 
+        us[app.conf.ns+&apos;User_Story_Title__c&apos;] = obj.Name +&apos; - &apos; + obj.agf__Type__c +&apos; - &apos; + obj.agf__Subject__c;
+        us[app.conf.ns+&apos;Status__c&apos;] = obj.agf__Status__c;
+        us[app.conf.ns+&apos;Project__c&apos;] = app.data.projectId;
+        us[app.conf.ns+&apos;Functional_Specifications__c&apos;] = obj.agf__Description__c;
+
+        return us;
+    }    
+
+};
+
 /**
  * VersionOne Copado adapter
  * This method retrieves, parses and transforms VersinoOne Issues to Copado User Stories
@@ -482,7 +599,6 @@ var copadoVersionOneAdapter = {
             console.debug(&apos;getCopadoUserStoryFromAPIObject us &apos;, us);
             return us;     
     }    
-
 };
 
 /**************************************************************************************************************
@@ -583,7 +699,8 @@ var app = {
         adapters:{
             &apos;JIRA&apos;: copadoJIRAAdapter,
             &apos;VersionOne&apos;: copadoVersionOneAdapter,
-            &apos;Rally&apos;: copadoRALLYAdapter
+            &apos;Rally&apos;: copadoRALLYAdapter,
+            &apos;Agile Accelerator&apos;: copadoAAAdapter
         },
         CREDENTIAL_SFDC_OBJECT : &apos;Change_Management_Integration_Credential__c&apos;,
         ns: &apos;copado__&apos;
