@@ -1,7 +1,7 @@
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
-The latest version supports JIRA, VersionOne and Rally.
+The latest version supports JIRA, VersionOne, Rally and Agile Accelerator.
 
 # How does it work?
 Copado Solutions has built the authentication module as well as the framework for retrieving user stories and inserting these into the Copado sObject called, "User Story".  The mapping is also handled by the integration.  Both the data being queried from the data source as well as the mapping can be modified.  We have commented the code with instructions to help with the customisation process.
