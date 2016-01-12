@@ -863,17 +863,34 @@ var app = {
                 obj &amp;&amp; records.push(obj);
             }
 
-            console.log(records);
+            console.log(records, records.length);
         
             if(records.length){
                 // this will insert or update a Issue or User Story
-                var result = sforce.connection.upsert(&apos;External_Id__c&apos;, records);
-                console.log(&apos;upsert result: &apos;, result);
-                var errors = &quot;&quot;;
-                for (var i=0; i&lt;result.length; i++) {
-                  if (!result[i].getBoolean(&quot;success&quot;)) {
-                    errors += result[i].errors.message +&quot;\n&quot;;
-                  }
+                var batch = [];
+                var batchNumber = 1;
+                var batchSize = 200;
+                var tmp = [];
+                for(var i=0; i&lt;records.length; i++){
+                    if(tmp.length == batchSize){
+                        batch[batchNumber] = tmp;
+                        tmp = [];
+                        batchNumber++;   
+                    }
+                    tmp.push(records[i]);
+                }
+                batch[batchNumber] = tmp;
+
+                console.log(&apos;Batch size: &apos;+batchNumber);
+                for(var j=1; j&lt;=batchNumber; j++){
+                    var result = sforce.connection.upsert(&apos;External_Id__c&apos;, batch[j]);
+                    console.log(&apos;upsert result: &apos;, result);
+                    var errors = &quot;&quot;;
+                    for (var i=0; i&lt;result.length; i++) {
+                      if (!result[i].getBoolean(&quot;success&quot;)) {
+                        errors += result[i].errors.message +&quot;\n&quot;;
+                      }
+                    }
                 }
                 if(errors == &quot;&quot;){
                   alert(app.labels.SUCCESS_SYNC);
@@ -883,7 +900,6 @@ var app = {
                   alert(errors);
                   app.hideScreenLocker();
                 }
-
             }else{
                 alert(app.labels.EMPTY_SYNC);
                 app.hideScreenLocker();
