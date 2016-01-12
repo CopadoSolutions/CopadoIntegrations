@@ -845,7 +845,7 @@ var app = {
      * @return {[type]}      [description]
      */
     makeAuthenticationTokenHeader: function(pass){
-        return &apos;Bearer&apos;+ pass;
+        return &apos;Bearer &apos;+ pass;
     },
 
     /**
