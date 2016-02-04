@@ -84,6 +84,18 @@
         <unique>true</unique>
     </fields>
     <fields>
+        <fullName>Workspace_Id__c</fullName>
+        <externalId>false</externalId>
+        <inlineHelpText>For Rally, the workspace ID is required in addition to the External Project Id.</inlineHelpText>
+        <label>Workspace Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>copado__Deployment_Flow__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
         <deprecated>false</deprecated>
@@ -233,9 +245,10 @@ SOFTWARE.
 {!REQUIRESCRIPT(&quot;https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;)}
 
 //check required fields
-var credentialId = &apos;{!copado__Project__c.Change_Management_IntegrationId__c }&apos;,
-projectExternalId = &apos;{!copado__Project__c.External_Id__c }&apos;,
-projectId = &apos;{!copado__Project__c.Id }&apos;;
+var credentialId = &apos;{!copado__Project__c.Change_Management_IntegrationId__c}&apos;,
+projectExternalId = &apos;{!copado__Project__c.External_Id__c}&apos;,
+workspaceId = &apos;{!copado__Project__c.Workspace_Id__c}&apos;,
+projectId = &apos;{!copado__Project__c.Id}&apos;;
 
 
 /**************************************************************************************************************
@@ -537,7 +550,7 @@ var copadoVersionOneAdapter = {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    parseAPIResponse: function(res){
+    convertToCopadoUserStory: function(res){
         return JSON.parse(res);
     },
     /**
@@ -624,7 +637,9 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
         var app = this.controller;
         var query = &apos;(Project.ObjectID = &quot;&apos;+projectExternalId+&apos;&quot;)&apos;;
         var url = app.data.credential.endpoint +&apos;hierarchicalrequirement?query=&apos;+encodeURIComponent(query)+&apos;&amp;fetch=true&amp;pagesize=200&apos;;
-        console.debug(&apos;Calling url: &apos;, url);
+        if(workspaceId){
+            url = url + &apos;&amp;workspace=workspace/&apos;+workspaceId;
+        }
         return url;
     },
     /**
@@ -649,7 +664,47 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @return {[type]}     [description]
      */
     getIssueList : function(res){
-        return res.QueryResult.Results;
+        var startIndex = res.QueryResult.StartIndex;
+        var TotalResultCount = res.QueryResult.TotalResultCount;
+        var tmpResults = res.QueryResult.Results;
+
+        //if(var _startIndex=1; _startIndex&lt;TotalResultCount; _startIndex++){
+        while(tmpResults.length &lt; TotalResultCount){
+            startIndex = tmpResults.length+1;
+            var _url = app.adapter.getUrl(projectExternalId)+&apos;&amp;start=&apos;+startIndex;
+            console.log(&apos;Calling url: &apos;+_url);
+            console.info(startIndex, TotalResultCount, tmpResults.length);
+            sforce.connection.remoteFunction({
+                async: false,
+                url: _url,
+                requestHeaders: app.adapter.getHeaders(),
+                method: app.adapter.getMethod(),
+                requestData: app.adapter.getBody(),
+
+                onSuccess : function(_res) {
+                    try{
+                        _res = app.adapter.parseAPIResponse(_res);
+                    }catch(e){
+                        console.error(e);
+                        alert(app.labels.UNEXPECTED_API_RESPONSE);
+                        return;
+                    }
+                    console.info(&apos;Current length: &apos;+tmpResults.length);
+                    console.info(&apos;New retrieval length: &apos;+_res.QueryResult.Results.length);
+                    Array.prototype.push.apply(tmpResults, _res.QueryResult.Results);
+                    console.info(&apos;New length: &apos;+tmpResults.length);
+                },
+
+                onFailure : function(_res, request) {
+                    console.error(_res, request);
+                    app.adapter.onFailure(_res,request);
+                    app.hideScreenLocker();
+                },
+                timeout: 25000
+            });
+        }
+        console.info(&apos;Returning results&apos;+tmpResults.length);
+        return tmpResults;
     },
     /**
      * FIELD MAPPINGS - Rally
