@@ -49,7 +49,7 @@ Once the integration credentials have been setup, you will need to create a new 
 ### Fields
 - Change Management Integration - This lookup field looks up the credential you just created.
 - External Id - This external Id field needs the Id of the project for which we will import the User Stories.
-- Worspace Id - Only relevant for Rally when using workspaces.
+- Workspace Id - Only relevant for Rally when using workspaces.
 
 ### Buttons
 - Add button called, "Sync External User Stories" to the project layout.
