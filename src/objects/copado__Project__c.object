@@ -317,7 +317,7 @@ var copadoJIRAAdapter = {
      * @param  {[type]} request [description]
      * @return {[type]}         [description]
      */
-    onFailure : function(res, request) {
+    onFailure: function(res, request) {
 
         var app = this.controller; 
         console.error(res, request);
@@ -337,7 +337,7 @@ var copadoJIRAAdapter = {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    getIssueList : function(res){
+    getIssueList: function(res){
         return res.issues;
     },
     /**
@@ -347,7 +347,7 @@ var copadoJIRAAdapter = {
      * @param  {[type]} obj [description]
      * @return {[type]}     [description]
      */
-    getCopadoUserStoryFromAPIObject : function(obj){
+    getCopadoUserStoryFromAPIObject: function(obj){
 
         if(obj.fields.issuetype.name == &apos;Story&apos;){
 
@@ -439,7 +439,7 @@ var copadoAAAdapter = {
      * @param  {[type]} request [description]
      * @return {[type]}         [description]
      */
-    onFailure : function(res, request) {
+    onFailure: function(res, request) {
 
         var app = this.controller; 
         console.error(res, request);
@@ -459,7 +459,7 @@ var copadoAAAdapter = {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    getIssueList : function(res){
+    getIssueList: function(res){
         return res.records;
     },
     /**
@@ -469,7 +469,7 @@ var copadoAAAdapter = {
      * @param  {[type]} obj [description]
      * @return {[type]}     [description]
      */
-    getCopadoUserStoryFromAPIObject : function(obj){
+    getCopadoUserStoryFromAPIObject: function(obj){
 
         var app = this.controller;    
 
@@ -559,7 +559,7 @@ var copadoVersionOneAdapter = {
      * @param  {[type]} request [description]
      * @return {[type]}         [description]
      */
-    onFailure : function(res, request) {
+    onFailure: function(res, request) {
         console.debug(&apos;failure res: &apos;, res);
         console.debug(&apos;failure request: &apos;, request);
         var app = this.controller; 
@@ -582,7 +582,7 @@ var copadoVersionOneAdapter = {
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    getIssueList : function(res){
+    getIssueList: function(res){
         console.debug(&apos;getIssueList &apos;, res);
         console.debug(&apos;getIssueList res[0] &apos;, res[0]);
         return res[0];
@@ -594,7 +594,7 @@ var copadoVersionOneAdapter = {
      * @param  {[type]} obj [description]
      * @return {[type]}     [description]
      */
-    getCopadoUserStoryFromAPIObject : function(obj){
+    getCopadoUserStoryFromAPIObject: function(obj){
             console.debug(&apos;getCopadoUserStoryFromAPIObject obj &apos;, obj);
             var app = this.controller;    
             console.debug(&apos;app.conf &apos;, app.conf);
@@ -633,7 +633,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} projectExternalId [description]
      * @return {[type]}                   [description]
      */
-    getUrl : function(projectExternalId){
+    getUrl: function(projectExternalId){
         var app = this.controller;
         var query = &apos;(Project.ObjectID = &quot;&apos;+projectExternalId+&apos;&quot;)&apos;;
         var url = app.data.credential.endpoint +&apos;hierarchicalrequirement?query=&apos;+encodeURIComponent(query)+&apos;&amp;fetch=true&amp;pagesize=200&apos;;
@@ -648,7 +648,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} request [description]
      * @return {[type]}         [description]
      */
-    onFailure : function(res, request) {
+    onFailure: function(res, request) {
         var app = this.controller; 
 
         console.error(res, request);
@@ -663,7 +663,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} res [description]
      * @return {[type]}     [description]
      */
-    getIssueList : function(res){
+    getIssueList: function(res){
         var startIndex = res.QueryResult.StartIndex;
         var TotalResultCount = res.QueryResult.TotalResultCount;
         var tmpResults = res.QueryResult.Results;
@@ -713,7 +713,7 @@ $.extend(copadoRALLYAdapter, copadoJIRAAdapter,{
      * @param  {[type]} obj [description]
      * @return {[type]}     [description]
      */
-    getCopadoUserStoryFromAPIObject : function(obj){
+    getCopadoUserStoryFromAPIObject: function(obj){
 
             var app = this.controller;    
 
