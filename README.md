@@ -19,8 +19,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t240000006Mh7
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t240000006Mh7
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5m
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5m
 
 # Customisation
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
@@ -39,6 +39,11 @@ This is done from the "Change Management Integrations" tab.
 - A VersionOne endpoint might look as follows: https://www9.v1host.com/COMPANY_NAME/
 - A Rally endpoint might look as follows: https://rally1.rallydev.com/slm/webservice/v2.0/
 - An Agile Accelerator endpoint might look as follows: https://na12.salesforce.com
+- A ScrumDo endpoint might look as follows: https://www.scrumdo.com/api/v2/organizations/ORGANIZATION_SLUG
+	- The organization slug can be determined by visiting ScrumDo Dashboard, and looking at the navigator URL
+		https://app.scrumdo.com/organization/<ORGANIZATION_SLUG>/dashboard#/overview
+	- The project slug can be determined by visiting ScrumDo Board for that project, and looking at the navigator URL
+		https://app.scrumdo.com/projects/<PROJECT_SLUG>/board#/view
 - For Agile Accelerator even username and password are required, those fields are not used since current sessionId will be used instead. Please fill any text, such as N/A
 - For Agile Accelerator the Project External Id field is match against the Product tag name so that only Work records for that product tag are imported against the Copado Project. This can be customizable as well.
 
