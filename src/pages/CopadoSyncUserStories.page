@@ -1,0 +1,945 @@
+<apex:page standardController="copado__Project__c">
+    <head>
+       <script type="text/javascript" src="{!URLFOR($Resource.copado__Statics,'js/libs/jquery.min.1.10.2.js')}"></script>
+        </head>
+        <script type="text/javascript">
+               var $copado = jQuery.noConflict(), 
+               __sfdcSessionId = '{!GETSESSIONID()}';
+        </script>
+       <script type="text/javascript" src="/soap/ajax/32.0/connection.js"></script>
+       <script type="text/javascript" src="/soap/ajax/32.0/apex.js"></script>
+<script>
+        
+/*
+Copyright (c) 2015 Copado Solutions SL
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+*/
+
+//check required fields
+var credentialId = '{!copado__Project__c.Change_Management_Integration__c}',
+projectExternalId = '{!copado__Project__c.External_Id__c}',
+workspaceId = '{!copado__Project__c.Workspace_Id__c}',
+projectId = '{!copado__Project__c.Id}';
+
+
+/**************************************************************************************************************
+ * Copado Adapter to JIRA
+ * 
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories into Copado User Stories
+ *
+ * If you want to write your custom adapter, you will only have to extend this object and overide the methods you need.
+ * @type {Object}
+ */
+var copadoJIRAAdapter = {
+
+    /**
+     * This method should return the body data to send in POST messages. 
+     * @return {[type]} [description]
+     */
+    getBody: function(){ return {} },
+
+    /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +'search?jql=project='+projectExternalId;
+        console.debug('Calling url: ', url);
+        return url;
+    },
+
+    /**
+     * This method returns the request method for the adapter
+     * @return {[type]} [description]
+     */
+    getMethod: function(){
+        return 'GET';
+    },
+    /**
+     * Should return the request header
+     * You have to override this method if you need to change from Basic Authentication to other type, 
+     * or if you need to add additional headers
+     * @return {[type]} [description]
+     */
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+           "Content-Type": "application/json",
+           "Authorization": app.makeBasicAuthenticationHeader(app.data.credential.username,app.data.credential.password)
+        };
+    },
+    /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    parseAPIResponse: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+
+        var app = this.controller; 
+        console.error(res, request);
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            try{
+                //try to parse and show the remote error
+                res = JSON.parse(res);    
+            }catch(e){ res = false;}
+            var app = this.controller;
+            alert(res&&res.errorMessages&&res.errorMessages.length&&res.errorMessages[0]||app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+        }     
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        return res.issues;
+    },
+    /**
+     * FIELD MAPPINGS - JIRA
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+
+        if(obj.fields.issuetype.name == 'Story'){
+
+            var app = this.controller;    
+
+            //Create the SObject instance
+            var us = new sforce.SObject(app.conf.ns+'User_Story__c');
+            //set the external Id
+            us.External_Id__c = obj.id;        
+
+            //set the fields 
+            us[app.conf.ns+'User_Story_Title__c'] = obj.key + ' - ' + obj.fields.summary;
+            us[app.conf.ns+'Status__c'] = obj.fields.status.name;
+            us[app.conf.ns+'Project__c'] = app.data.projectId;
+            us[app.conf.ns+'Functional_Specifications__c'] = obj.fields.description;
+
+            return us;
+
+        }else{
+            return false;
+        }
+    }    
+
+};
+
+/**************************************************************************************************************
+ * Copado Agile Accelerator Adapter
+ * 
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories (Work Items) into Copado User Stories
+ *
+ * If you want to write your custom adapter, you will only have to extend this object and overide the methods you need.
+ * @type {Object}
+ */
+var copadoAAAdapter = {
+
+    /**
+     * This method should return the body data to send in POST messages. 
+     * @return {[type]} [description]
+     */
+    getBody: function(){ return {} },
+
+    /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +'/services/data/v34.0/query?q=SELECT+Id,Name,+agf__Subject__c,+agf__Description__c,+agf__Status__c,+agf__Type__c+FROM+agf__ADM_Work__c+WHERE+agf__Product_Tag__r.Name+=+\''+encodeURIComponent(projectExternalId) +'\'';
+        console.debug('Calling url: ', url);
+        return url;
+    },
+
+    /**
+     * This method returns the request method for the adapter
+     * @return {[type]} [description]
+     */
+    getMethod: function(){
+        return 'GET';
+    },
+    /**
+     * Should return the request header
+     * You have to override this method if you need to change from Basic Authentication to other type, 
+     * or if you need to add additional headers
+     * @return {[type]} [description]
+     */
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+           "Content-Type": "application/json",
+           "Authorization": "Bearer {!$Api.Session_ID}"
+        };
+    },
+    /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    parseAPIResponse: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+
+        var app = this.controller; 
+        console.error(res, request);
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            try{
+                //try to parse and show the remote error
+                res = JSON.parse(res);    
+            }catch(e){ res = false;}
+            var app = this.controller;
+            alert(res&&res.errorMessages&&res.errorMessages.length&&res.errorMessages[0]||app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+        }     
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        return res.records;
+    },
+    /**
+     * FIELD MAPPINGS - JIRA
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+
+        var app = this.controller;    
+
+        //Create the SObject instance
+        var us = new sforce.SObject(app.conf.ns+'User_Story__c');
+        //set the external Id
+        us.External_Id__c = obj.Name;        
+
+        //set the fields 
+        us[app.conf.ns+'User_Story_Title__c'] = obj.Name +' - ' + obj.agf__Type__c +' - ' + obj.agf__Subject__c;
+        us[app.conf.ns+'Status__c'] = obj.agf__Status__c;
+        us[app.conf.ns+'Project__c'] = app.data.projectId;
+        us[app.conf.ns+'Functional_Specifications__c'] = obj.agf__Description__c;
+
+        return us;
+    }    
+
+};
+
+/**
+ * VersionOne Copado adapter
+ * This method retrieves, parses and transforms VersinoOne Issues to Copado User Stories
+ * @type {Object}
+ */
+var copadoVersionOneAdapter = {
+     /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    parseAPIResponse: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * This method should return the body data to send in POST messages. 
+     * @return {[type]} [description]
+     */
+    getBody: function(){ 
+        var app = this.controller;
+        return JSON.stringify({ 
+            from: 'Story',
+            select: ["Name", "Scope", "Status.Name", "Description", "Priority.Name"],
+            filter: ["Scope='Scope:"+app.data.projectExternalId+"'"],
+            limit: 50
+        });
+    },
+    /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     * 
+     * @param  {[type]}     [description]
+     * @return {[type]}     [description]
+     */
+    getUrl: function(){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +'query.v1';
+        console.debug('Calling url: ', url);
+        return url;
+    },
+    /**
+     * This method returns the request method for the adapter
+     * @return {[type]} [description]
+     */
+    getMethod: function(){
+        return 'POST';
+    },
+    /**
+     * Should return the request header
+     * You have to override this method if you need to change from Basic Authentication to other type, 
+     * or if you need to add additional headers
+     * @return {[type]} [description]
+     */
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+            "Content-Type": "application/json",
+            "Authorization": (app.data.credential.method=='Authentication Token')?app.makeAuthenticationTokenHeader(app.data.credential.password):app.makeBasicAuthenticationHeader(app.data.credential.username,app.data.credential.password),
+            "Accept": "haljson",
+            "dataType": "json"
+        };
+    },
+    /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    convertToCopadoUserStory: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+        console.debug('failure res: ', res);
+        console.debug('failure request: ', request);
+        var app = this.controller; 
+
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            try{
+                //try to parse and show the remote error
+                res = JSON.parse(request.responseText);    
+            }catch(e){ res = false;}
+            var app = this.controller;
+            alert(res&&res.error||app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+
+        }
+        
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        console.debug('getIssueList ', res);
+        console.debug('getIssueList res[0] ', res[0]);
+        return res[0];
+    },
+    /**
+     * FIELD MAPPINGS - VersionOne
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+            console.debug('getCopadoUserStoryFromAPIObject obj ', obj);
+            var app = this.controller;    
+            console.debug('app.conf ', app.conf);
+
+            //create the SObject instance
+            var us = new sforce.SObject(app.conf.ns+'User_Story__c');
+            //set the external Id
+            us.External_Id__c = obj._oid;        
+
+            //set the fields 
+            us[app.conf.ns+'User_Story_Title__c'] = obj.Name;
+            us[app.conf.ns+'Status__c'] = obj['Status.Name'];
+            us[app.conf.ns+'Project__c'] = app.data.projectId;
+            us[app.conf.ns+'Functional_Specifications__c'] = obj.Description;
+            console.debug('getCopadoUserStoryFromAPIObject us ', us);
+            return us;     
+    }    
+};
+
+/**************************************************************************************************************
+ * Copado Adapter to RALLY
+ * 
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories into Copado User Stories
+ *
+ * This class extends from copadoJIRAAdapter
+ */
+
+var copadoRALLYAdapter = {};
+$copado.extend(copadoRALLYAdapter, copadoJIRAAdapter,{ 
+    /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl : function(projectExternalId){
+        var app = this.controller;
+        var query = '(Project.ObjectID = "'+projectExternalId+'")';
+        var url = app.data.credential.endpoint +'hierarchicalrequirement?query='+encodeURIComponent(query)+'&fetch=true&pagesize=200';
+        if(workspaceId){
+            url = url + '&workspace=workspace/'+workspaceId;
+        }
+        return url;
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+        var app = this.controller; 
+
+        console.error(res, request);
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            alert(app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+        }     
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        var startIndex = res.QueryResult.StartIndex;
+        var TotalResultCount = res.QueryResult.TotalResultCount;
+        var tmpResults = res.QueryResult.Results;
+
+        //if(var _startIndex=1; _startIndex<TotalResultCount; _startIndex++){
+        while(tmpResults.length < TotalResultCount){
+            startIndex = tmpResults.length+1;
+            var _url = app.adapter.getUrl(projectExternalId)+'&start='+startIndex;
+            console.log('Calling url: '+_url);
+            console.info(startIndex, TotalResultCount, tmpResults.length);
+            sforce.connection.remoteFunction({
+                async: false,
+                url: _url,
+                requestHeaders: app.adapter.getHeaders(),
+                method: app.adapter.getMethod(),
+                requestData: app.adapter.getBody(),
+
+                onSuccess : function(_res) {
+                    try{
+                        _res = app.adapter.parseAPIResponse(_res);
+                    }catch(e){
+                        console.error(e);
+                        alert(app.labels.UNEXPECTED_API_RESPONSE);
+                        return;
+                    }
+                    console.info('Current length: '+tmpResults.length);
+                    console.info('New retrieval length: '+_res.QueryResult.Results.length);
+                    Array.prototype.push.apply(tmpResults, _res.QueryResult.Results);
+                    console.info('New length: '+tmpResults.length);
+                },
+
+                onFailure : function(_res, request) {
+                    console.error(_res, request);
+                    app.adapter.onFailure(_res,request);
+                    app.hideScreenLocker();
+                },
+                timeout: 25000
+            });
+        }
+        console.info('Returning results'+tmpResults.length);
+        return tmpResults;
+    },
+    /**
+     * FIELD MAPPINGS - Rally
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+
+            var app = this.controller;    
+
+            //Create the SObject instance
+            var us = new sforce.SObject(app.conf.ns+'User_Story__c');
+            //set the external Id
+            us.External_Id__c = obj.ObjectUUID;        
+
+            //set the fields 
+            us[app.conf.ns+'User_Story_Title__c'] = obj.FormattedID + ' - ' + obj.Name;
+            us[app.conf.ns+'Status__c'] = obj.ScheduleState;
+            us[app.conf.ns+'Project__c'] = app.data.projectId;
+            us[app.conf.ns+'Functional_Specifications__c'] = obj.Description;
+
+            return us;
+    }    
+
+});
+
+
+/**************************************************************************************************************
+ * Copado Adapter to ScrumDo
+ *
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories into Copado User Stories
+ *
+ * This class extends from copadoJIRAAdapter
+ */
+
+var copadoScrumDoAdapter = {};
+$copado.extend(copadoScrumDoAdapter, copadoJIRAAdapter, {
+    /**
+     * This method returns the absolute url to call the API method
+     *
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     *
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId) {
+        var app = this.controller;
+        // https://www.scrumdo.com/api/v2/organizations/COMPANY_NAME/projects/PROJECT_NAME/stories?page=1
+        // NOTE: the endpoint should include the org, what is called "organization_slug" in ScrumDo
+        // Example Endpoint: https://www.scrumdo.com/api/v2/organizations/COMPANY_NAME
+        // NOTE: projectExternalId is what is called "project_slug" in ScrumDo
+        var url = app.data.credential.endpoint + '/projects/' + projectExternalId + '/stories';
+        console.log('getUrl='+url);
+        return url;
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure: function(res, request) {
+        var app = this.controller;
+
+        console.error(res, request);
+        if (request.status == 401) {
+            alert(app.labels.LOGIN_ERROR);
+        } else {
+            alert(app.labels.UNEXPECTED_ERROR_ON + app.data.credential.externalSystem);
+        }
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList: function(res) {
+        var curPage = res.current_page;
+        var maxPage = res.max_page;
+        console.log('res=', res);
+        var tmpResults = [];
+
+        // process the first batch, that comes in res
+        Array.prototype.push.apply(tmpResults, res.items);
+        console.info('New length: ' + tmpResults.length);
+        console.info('res=', res);
+        
+        curPage++;
+        for(; curPage < maxPage ; curPage++ ) {
+            var _url = app.adapter.getUrl(projectExternalId) + '?page=' + curPage;
+            console.log('Calling url: ' + _url);
+            sforce.connection.remoteFunction({
+                async: false,
+                url: _url,
+                requestHeaders: app.adapter.getHeaders(),
+                method: app.adapter.getMethod(),
+                requestData: app.adapter.getBody(),
+                onSuccess: function(_res) {
+                    try {
+                        _res = app.adapter.parseAPIResponse(_res);
+                    } catch (e) {
+                        console.error(e);
+                        alert(app.labels.UNEXPECTED_API_RESPONSE);
+                        return;
+                    }
+                    Array.prototype.push.apply(tmpResults, _res.items);
+                    console.info('New length: ' + tmpResults.length);
+                },
+
+                onFailure: function(_res, request) {
+                    console.error(_res, request);
+                    app.adapter.onFailure(_res, request);
+                    app.hideScreenLocker();
+                },
+                timeout: 25000
+            });
+        }
+        console.info('Returning results' + tmpResults.length);
+        return tmpResults;
+    },
+    /**
+     * FIELD MAPPINGS - ScrumDo
+     * This method should transform the API story to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject: function(obj) {
+        console.log('obj=', obj);
+        var app = this.controller;
+
+        //Create the SObject instance
+        var us = new sforce.SObject(app.conf.ns + 'User_Story__c');
+        //set the external Id
+        us.External_Id__c = obj.id;
+
+        //set the fields
+        us[app.conf.ns + 'User_Story_Title__c'] = (obj.summary||'').trim();
+        us[app.conf.ns + 'Status__c'] = obj.status_text;
+        us[app.conf.ns + 'Project__c'] = app.data.projectId;
+        us[app.conf.ns + 'Functional_Specifications__c'] = (obj.detail||'').trim();
+
+        return us;
+    }
+
+});
+
+/**
+ * Main Importer controller class. 
+ * Important: Do not change these methods except for the "conf" attributes which may be modified as necessary. 
+ * 
+ * @type {Object}
+ */
+var app = {
+
+    data:{},
+
+    conf:{ 
+        /**
+         * To extend this system map here the copadoAdapter
+         * Remember this class should implement next methods: 
+         * 
+         * @type {Object}
+         */
+        adapters:{
+            'JIRA': copadoJIRAAdapter,
+            'VersionOne': copadoVersionOneAdapter,
+            'Rally': copadoRALLYAdapter,
+            'Agile Accelerator': copadoAAAdapter,
+            'ScrumDo': copadoScrumDoAdapter
+        },
+        CREDENTIAL_SFDC_OBJECT : 'Change_Management_Integration_Credential__c',
+        ns: 'copado__'
+    },
+
+    labels: {
+        COMPLETE_FIELDS_ERROR: 'Before retrieving User Stories, you need to complete the Change Management Integration and External Id field.',
+        LOGIN_ERROR: 'Login Error. Selected cretendials are invalid. ',
+        CREDENTIALS_MISSING: 'The selected credentials are missing. The record may have been removed or unshared.',
+        EMPTY_SYNC: 'There were no User Stories needing to be imported', 
+        SUCCESS_SYNC: 'The User Stories were successfully updated',
+        UNEXPECTED_ERROR_ON: 'Unexpected error on ',
+        UNEXPECTED_ERROR_WHILE_GETTING_CREDENTIALS: 'Unexpected error while getting Credentials.',
+        UNEXPECTED_API_RESPONSE: 'Unexpected API response.',
+        NO_ADAPTER_CONFIGURED: 'There is no adapter configured for ',
+        CONFIGURED_ADAPTER_ERROR: 'Configured adapter for _TYPE_ does not exist'
+    },
+
+    /**
+     * Static helpers
+     * @type {Object}
+     */
+    html: {
+        cssLocker: '#screenLocker{position:fixed; top:0; left:0; height:100%; width:100%; z-index:1000; background-color:rgba(33,33,33,0.2);}#screenLocker p{position:absolute; top:50%; left:50%; margin-right:-50%; transform:translate(-50%,-50%); padding-top:15px; border:1px solid grey; padding:30px; border-radius:10px; background-color:#fff;}',
+        screenLocker: '<div id="screenLocker" ><p><img src="/img/loading.gif" /> Loading...</p></div>'
+    },
+
+    /**
+     * This method creates the screenlocker element
+     * @return {[type]} [description]
+     */
+    createScreenLocker: function(){
+        
+        var $screenlocker = $copado('#screenLocker');
+        if($screenlocker.length){
+            $screenlocker.show();
+        }else{
+            $copado('body')
+                .append('<style>'+app.html.cssLocker+'</style>')
+                .append(app.html.screenLocker);
+        }
+    },
+
+    /**
+     * This method hides the screenLocker 
+     * @return {[type]} [description]
+     */
+    hideScreenLocker: function(){
+        $copado('#screenLocker').hide();
+    },
+
+    /**
+     * A generic method to get the credentials from the CREDENTIAL_SFDC_OBJECT SObject.
+     * This method should be extended if new fields are needed.
+     * The extension should fill the app.data.credentials obj.
+     * 
+     * @param  {[type]} credentialId [description]
+     * @return {[type]}              [description]
+     */
+    getCredentials: function(credentialId){
+        
+        var query = 'SELECT Username__c, Password__c, Endpoint__c, Authentication_Method__c,External_System__c FROM '+app.conf.CREDENTIAL_SFDC_OBJECT+' WHERE Id=\''+credentialId+'\' LIMIT 1';
+
+        console.log('Getting credentials...');
+        try{
+            var records = sforce.connection.query(query).getArray('records'); 
+            if(records == null || records.length == 0){ 
+                alert(app.labels.CREDENTIALS_MISSING); 
+            }else{ 
+                var credential = records[0];
+                //Set local values to those retrieved from Salesforce
+                app.data.credential = {
+                    externalSystem: credential.External_System__c, 
+                    username: credential.Username__c, 
+                    password: Base64.decode(credential.Password__c), 
+                    method: credential.Authentication_Method__c, 
+                    endpoint: credential.Endpoint__c
+                };
+                console.log('Credentials ', app.data.credential)
+            }
+        }catch(e){
+            //In case of an error during the query process, just alert the user and end the process
+            alert(app.labels.UNEXPECTED_ERROR_WHILE_GETTING_CREDENTIALS);
+            console.error(e);
+            app.hideScreenLocker();
+        }
+    },
+
+    /**
+     * This is the main method which: 
+     *   - sends the request
+     *   - parses the response
+     *   - transforms the external object
+     *   - upserts the imported issues
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    retrieveFromPMAPI: function(projectExternalId){
+        console.log('Retrieving from PM API');
+
+        // use sforce proxy to access 
+        sforce.connection.remoteFunction({
+            url : app.adapter.getUrl(projectExternalId),
+            requestHeaders: app.adapter.getHeaders(),
+            method: app.adapter.getMethod(),
+            requestData: app.adapter.getBody(),
+
+            onSuccess : function(res) {
+                try{
+                    res = app.adapter.parseAPIResponse(res);
+                }catch(e){
+                    console.error(e);
+                    alert(app.labels.UNEXPECTED_API_RESPONSE);
+                    return;
+                }
+                app.convertToCopadoUserStory(res);
+            },
+
+            onFailure : function(res, request) {
+                console.error(res, request);
+                app.adapter.onFailure(res,request);
+                app.hideScreenLocker();
+            },
+            timeout: 25000
+        });
+    },
+
+    /**
+     * Generic helper to handle basic authentication
+     * @param  {[type]} user [description]
+     * @param  {[type]} pass [description]
+     * @return {[type]}      [description]
+     */
+    makeBasicAuthenticationHeader: function(user,pass){
+        return 'Basic '+ Base64.encode(user +':'+pass);
+    },
+
+    /**
+     * Generic helper to handle authentication tokens
+     * @param  {[type]} pass [description]
+     * @return {[type]}      [description]
+     */
+    makeAuthenticationTokenHeader: function(pass){
+        return 'Bearer '+ pass;
+    },
+
+    /**
+     * This should be overwritten by adapter type (Jira, VersionOne etc..)
+     * @return {[type]} [description]
+     */
+    convertToCopadoUserStory: function(res){
+        try{
+            var records = [],
+            issues = app.adapter.getIssueList(res),
+            len = issues.length;
+
+            while(len--){
+                var obj = app.adapter.getCopadoUserStoryFromAPIObject(issues[len]);
+                obj && records.push(obj);
+            }
+
+            console.log(records, records.length);
+        
+            if(records.length){
+                // this will insert or update a Issue or User Story
+                var batch = [];
+                var batchNumber = 1;
+                var batchSize = 200;
+                var tmp = [];
+                for(var i=0; i<records.length; i++){
+                    if(tmp.length == batchSize){
+                        batch[batchNumber] = tmp;
+                        tmp = [];
+                        batchNumber++;   
+                    }
+                    tmp.push(records[i]);
+                }
+                batch[batchNumber] = tmp;
+
+                console.log('Batch size: '+batchNumber);
+                for(var j=1; j<=batchNumber; j++){
+                    var result = sforce.connection.upsert('External_Id__c', batch[j]);
+                    console.log('upsert result: ', result);
+                    var errors = "";
+                    for (var i=0; i<result.length; i++) {
+                      if (!result[i].getBoolean("success")) {
+                        errors += result[i].errors.message +"\n";
+                      }
+                    }
+                }
+                if(errors == ""){
+                  alert(app.labels.SUCCESS_SYNC);
+                    window.location.href = "/{!copado__Project__c.Id}";
+                }
+                else{
+                  alert(errors);
+                  app.hideScreenLocker();
+                }
+            }else{
+                alert(app.labels.EMPTY_SYNC);
+                app.hideScreenLocker();
+            }
+        }
+        catch(e){
+            alert(app.labels.UNEXPECTED_ERROR_ON+' conversion of response object to Copado User Story.');
+            console.error(e);
+            console.error('Response was: ', res);
+            app.hideScreenLocker();
+        }   
+    },
+    
+    /**
+     * Validate and Retrieve User Stories
+     * @param  {[type]} credentialId      [description]
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    init: function(credentialId, projectExternalId, projectId){
+
+        //validate required fields
+        if(!credentialId || !projectExternalId){
+            alert(app.labels.COMPLETE_FIELDS_ERROR);
+        }else{
+            //start process 
+            app.data.projectId = projectId;
+            app.data.projectExternalId = projectExternalId;
+            app.createScreenLocker();
+
+            app.getCredentials(credentialId);
+            if(app.data.credential){
+                //check that the adapter exists for the credential type
+                app.data.Type = app.data.credential.externalSystem;
+                // check that config exists
+                if(!app.conf.adapters[app.data.Type]){
+                    alert(app.labels.NO_ADAPTER_CONFIGURED+app.data.Type);
+                    return;
+                }
+                app.adapter = app.conf.adapters[app.data.Type];
+                app.adapter.controller = app;
+
+                //check adapter class exists
+                if(!app.adapter){
+                    alert(app.labels.CONFIGURED_ADAPTER_ERROR.replace('_TYPE_',app.data.Type));
+                    return;
+                }
+                //call retriever
+                app.retrieveFromPMAPI(projectExternalId);
+            }else{
+                console.error('No credentials found.')
+            }
+        }
+    }
+};
+
+//*******************
+//Utils stuff
+var Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(c){var a="",d,b,f,g,h,e,j=0;for(c=Base64._utf8_encode(c);j<c.length;)d=c.charCodeAt(j++),b=c.charCodeAt(j++),f=c.charCodeAt(j++),g=d>>2,d=(d&3)<<4|b>>4,h=(b&15)<<2|f>>6,e=f&63,isNaN(b)?h=e=64:isNaN(f)&&(e=64),a=a+this._keyStr.charAt(g)+this._keyStr.charAt(d)+this._keyStr.charAt(h)+this._keyStr.charAt(e);return a},decode:function(c){var a="",d,b,f,g,h,e=0;for(c=c.replace(/[^A-Za-z0-9\+\/\=]/g,"");e<c.length;)d=this._keyStr.indexOf(c.charAt(e++)),b=this._keyStr.indexOf(c.charAt(e++)),g=this._keyStr.indexOf(c.charAt(e++)),h=this._keyStr.indexOf(c.charAt(e++)),d=d<<2|b>>4,b=(b&15)<<4|g>>2,f=(g&3)<<6|h,a+=String.fromCharCode(d),64!=g&&(a+=String.fromCharCode(b)),64!=h&&(a+=String.fromCharCode(f));return a=Base64._utf8_decode(a)},_utf8_encode:function(c){c=c.replace(/\r\n/g,"\n");for(var a="",d=0;d<c.length;d++){var b=c.charCodeAt(d);128>b?a+=String.fromCharCode(b):(127<b&&2048>b?a+=String.fromCharCode(b>>6|192):(a+=String.fromCharCode(b>>12|224),a+=String.fromCharCode(b>>6&63|128)),a+=String.fromCharCode(b&63|128))}return a},_utf8_decode:function(c){for(var a="",d=0,b=c1=c2=0;d<c.length;)b=c.charCodeAt(d),128>b?(a+=String.fromCharCode(b),d++):191<b&&224>b?(c2=c.charCodeAt(d+1),a+=String.fromCharCode((b&31)<<6|c2&63),d+=2):(c2=c.charCodeAt(d+1),c3=c.charCodeAt(d+2),a+=String.fromCharCode((b&15)<<12|(c2&63)<<6|c3&63),d+=3);return a}};
+
+//main init
+
+$copado(function() {
+    app.init(credentialId,projectExternalId, projectId)
+});
+
+        
+        </script>
+</apex:page>
