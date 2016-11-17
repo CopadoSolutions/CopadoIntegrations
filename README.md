@@ -38,13 +38,13 @@ This is done from the "Change Management Integrations" tab.
 - A Jira endpoint might look as follows: https://COMPANAY_DOMAIN_NAME.atlassian.net/rest/api/2/
 - A VersionOne endpoint might look as follows: https://www9.v1host.com/COMPANY_NAME/
 - A Rally endpoint might look as follows: https://rally1.rallydev.com/slm/webservice/v2.0/
-- An Agile Accelerator endpoint might look as follows: https://na12.salesforce.com
+- An Agile Accelerator endpoint might look as follows: https://na12.salesforce.com (no ending "/")
 - A ScrumDo endpoint might look as follows: https://www.scrumdo.com/api/v2/organizations/ORGANIZATION_SLUG
 	- The organization slug can be determined by visiting ScrumDo Dashboard, and looking at the navigator URL
 		https://app.scrumdo.com/organization/<ORGANIZATION_SLUG>/dashboard#/overview
 	- The project slug can be determined by visiting ScrumDo Board for that project, and looking at the navigator URL
 		https://app.scrumdo.com/projects/<PROJECT_SLUG>/board#/view
-- For Agile Accelerator even username and password are required, those fields are not used since current sessionId will be used instead. Please fill any text, such as N/A
+- For Agile Accelerator even username and password are required, those fields are not used since current sessionId will be used instead. Please fill any text, such as N/A. Make sure that the Authentincation Method is set to "Authentication Token"
 - For Agile Accelerator the Project External Id field is match against the Product tag name so that only Work records for that product tag are imported against the Copado Project. This can be customizable as well.
 
 Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields.
