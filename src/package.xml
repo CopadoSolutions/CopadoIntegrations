@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>CopadoSyncUserStories</members>
-        <name>ApexPage</name>
-    </types>
-    <types>
-        <members>Change_Management_Integration_Credential__c.External_System__c</members>
-        <name>CustomField</name>
+        <members>Targetprocess</members>
+        <name>RemoteSiteSetting</name>
     </types>
     <version>38.0</version>
 </Package>
