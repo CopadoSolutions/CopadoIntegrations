@@ -651,6 +651,130 @@ $copado.extend(copadoScrumDoAdapter, copadoJIRAAdapter, {
     }
 
 });
+        
+/**************************************************************************************************************
+ * Copado Adapter to Targetprocess
+ * 
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories into Copado User Stories
+ *
+ * If you want to write your custom adapter, you will only have to extend this object and overide the methods you need.
+ * @type {Object}
+ */
+var copadoTargetprocessAdapter = {};
+$copado.extend(copadoTargetprocessAdapter, copadoJIRAAdapter, {
+     /**
+     * This method returns the absolute url to call the API method
+     * 
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     * 
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +'/api/v1/Context/?ids='+projectExternalId;
+        console.debug('Calling url: ', url);
+        return url;
+    },
+    getUserStoriesUrl: function(acid){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +'/api/v1/Userstories/?acid='+acid;
+        console.debug('Calling url: ', url);
+        return url;
+    },
+    
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+            "Accept": "application/json"
+        };
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure: function(res, request) {
+        var app = this.controller;
+
+        console.error(res, request);
+        if (request.status == 401) {
+            alert(app.labels.LOGIN_ERROR);
+        } else {
+            alert(app.labels.UNEXPECTED_ERROR_ON + app.data.credential.externalSystem);
+        }
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList: function(res) {
+        console.log('res=', res);
+        
+        var tmpResults = [];
+        
+        var _url = app.adapter.getUserStoriesUrl(res.Acid);
+        console.log('Calling url: ' + _url);
+        
+        sforce.connection.remoteFunction({
+            async: false,
+            url: _url,
+            requestHeaders: app.adapter.getHeaders(),
+            method: app.adapter.getMethod(),
+            requestData: app.adapter.getBody(),
+            onSuccess: function(_res) {
+                try {
+                    console.log('getUserStories response: ', _res);
+                    _res = app.adapter.parseAPIResponse(_res);
+                } catch (e) {
+                    console.error(e);
+                    alert(app.labels.UNEXPECTED_API_RESPONSE);
+                    return;
+                }
+                Array.prototype.push.apply(tmpResults, _res.Items);
+                console.info('New length: ' + tmpResults.length);
+            },
+            
+            onFailure: function(_res, request) {
+                console.error(_res, request);
+                app.adapter.onFailure(_res, request);
+                app.hideScreenLocker();
+            },
+            timeout: 25000
+            });
+
+        console.info('Returning results' + tmpResults.length);
+        return tmpResults;
+    },
+    /**
+     * FIELD MAPPINGS - Targetprocess
+     * This method should transform the API story to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject: function(obj) {
+        console.log('obj=', obj);
+        var app = this.controller;
+
+        //Create the SObject instance
+        var us = new sforce.SObject(app.conf.ns + 'User_Story__c');
+        //set the external Id
+        us.External_Id__c = obj.Id;
+
+        //set the fields
+        us[app.conf.ns + 'User_Story_Title__c'] = (obj.Name||'').trim();
+        us[app.conf.ns + 'Status__c'] = obj.EntityState.Name;
+        us[app.conf.ns + 'Project__c'] = app.data.projectId;
+        us[app.conf.ns + 'Functional_Specifications__c'] = (obj.Description||'').trim();
+
+        return us;
+    }
+
+});
 
 /**
  * Main Importer controller class. 
@@ -674,7 +798,8 @@ var app = {
             'VersionOne': copadoVersionOneAdapter,
             'Rally': copadoRALLYAdapter,
             'Agile Accelerator': copadoAAAdapter,
-            'ScrumDo': copadoScrumDoAdapter
+            'ScrumDo': copadoScrumDoAdapter,
+            'Targetprocess': copadoTargetprocessAdapter
         },
         CREDENTIAL_SFDC_OBJECT : 'Change_Management_Integration_Credential__c',
         ns: 'copado__'

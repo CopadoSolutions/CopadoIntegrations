@@ -6,7 +6,7 @@
     <label>CopadoSyncUserStories</label>
     <packageVersions>
         <majorNumber>1</majorNumber>
-        <minorNumber>60</minorNumber>
+        <minorNumber>61</minorNumber>
         <namespace>agf</namespace>
     </packageVersions>
     <packageVersions>

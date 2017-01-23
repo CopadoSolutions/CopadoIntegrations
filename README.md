@@ -1,7 +1,7 @@
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
-The latest version supports JIRA, VersionOne, Rally and Agile Accelerator.
+The latest version supports JIRA, VersionOne, Rally, Agile Accelerator, ScrumDo and TargetProcess
 
 # How does it work?
 Copado Solutions has built the authentication module as well as the framework for retrieving user stories and inserting these into the Copado sObject called, "User Story".  The mapping is also handled by the integration.  Both the data being queried from the data source as well as the mapping can be modified.  We have commented the code with instructions to help with the customisation process.
@@ -19,8 +19,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5m
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5m
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5r
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5r
 
 # Customisation
 In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
@@ -44,6 +44,7 @@ This is done from the "Change Management Integrations" tab.
 		https://app.scrumdo.com/organization/<ORGANIZATION_SLUG>/dashboard#/overview
 	- The project slug can be determined by visiting ScrumDo Board for that project, and looking at the navigator URL
 		https://app.scrumdo.com/projects/<PROJECT_SLUG>/board#/view
+- A TargetProccess endpoint might look as follows: https://contractor.tpondemand.com. 
 - For Agile Accelerator even username and password are required, those fields are not used since current sessionId will be used instead. Please fill any text, such as N/A. Make sure that the Authentincation Method is set to "Authentication Token"
 - For Agile Accelerator the Project External Id field is match against the Product tag name so that only Work records for that product tag are imported against the Copado Project. This can be customizable as well.
 
