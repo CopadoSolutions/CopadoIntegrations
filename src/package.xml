@@ -8,9 +8,5 @@
         <members>Change_Management_Integration_Credential__c.External_System__c</members>
         <name>CustomField</name>
     </types>
-    <types>
-        <members>ScrumDo</members>
-        <name>RemoteSiteSetting</name>
-    </types>
-    <version>37.0</version>
+    <version>38.0</version>
 </Package>
