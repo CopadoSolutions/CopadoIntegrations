@@ -23,7 +23,7 @@ To install the application use one of the below URLs.
 - Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Ng5r
 
 # Customisation
-In order to customise the the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS"
+In order to customise the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS" in the CopadoSyncUserStories Visualforce page.
 
 # Getting started
 1) The User Story Status picklist values should match those of your external system.
