@@ -35,7 +35,7 @@ In order to customise the mappings for the fields being retrieved, you will need
 
 Once the package is installed, you will need to setup a Change Management Integration Credential.
 This is done from the "Change Management Integrations" tab.
-- A Jira endpoint might look as follows: https://COMPANAY_DOMAIN_NAME.atlassian.net/rest/api/2/
+- A Jira endpoint might look as follows: https://COMPANY_DOMAIN_NAME.atlassian.net/rest/api/2/
 - A VersionOne endpoint might look as follows: https://www9.v1host.com/COMPANY_NAME/
 - A Rally endpoint might look as follows: https://rally1.rallydev.com/slm/webservice/v2.0/
 - An Agile Accelerator endpoint might look as follows: https://na12.salesforce.com (no ending "/")
