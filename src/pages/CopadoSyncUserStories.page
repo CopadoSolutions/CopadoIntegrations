@@ -679,7 +679,7 @@ $copado.extend(copadoTargetprocessAdapter, copadoJIRAAdapter, {
     },
     getUserStoriesUrl: function(acid){
         var app = this.controller;
-        var url = app.data.credential.endpoint +'/api/v1/Userstories/?acid='+acid;
+        var url = app.data.credential.endpoint +'/api/v1/Userstories/?acid='+acid+'&take=1000';
         console.debug('Calling url: ', url);
         return url;
     },
@@ -770,6 +770,7 @@ $copado.extend(copadoTargetprocessAdapter, copadoJIRAAdapter, {
         us[app.conf.ns + 'Status__c'] = obj.EntityState.Name;
         us[app.conf.ns + 'Project__c'] = app.data.projectId;
         us[app.conf.ns + 'Functional_Specifications__c'] = (obj.Description||'').trim();
+        
 
         return us;
     }
