@@ -19,8 +19,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgXp
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgXp
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgjT
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgjT
 
 # Customisation
 In order to customise the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS" in the CopadoSyncUserStories Visualforce page.
@@ -65,3 +65,19 @@ Some Remote Sites settings have been included for your convenience.  The Jira Re
 You may delete the remote sites settings that you will not need.
 
 Once everything is setup, you can press the "Sync External User Stories" button.
+
+## New Apex Jira-Copado integration
+The latest version of Copado Integrations contains a set of Apex classes in which you can edit your Jira-Copado field mappings and schedule this integration.
+This integration relies in the same Change Management Record you need to create prior the integration.
+
+### Fields mapping
+The User Story and Epic fields are mapped into the following class: JiraIssueFetcher_Batch.
+The mappings are implemented in the following methods: MapJIRAEpic, MapJIRAFields.
+
+### On demand import
+You can invoke the following method in order to retrieve Jira's issues and epics: JiraIssueFetcher_Batch.FetchIssues();
+
+### Scheduled import
+Replace the "cron_expression" as per your requirements and run the following script in your Developer Console:
+	JiraIssueFetcher_Schedule sch = new JiraIssueFetcher_Schedule();
+        System.schedule('JiraIssueFetcher', cron_expression, sch);
