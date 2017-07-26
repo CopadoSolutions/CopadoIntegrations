@@ -68,7 +68,7 @@ var copadoJIRAAdapter = {
      */
     getUrl: function(projectExternalId){
         var app = this.controller;
-        var url = app.data.credential.endpoint +'search?jql=project='+projectExternalId;
+        var url = app.data.credential.endpoint +'search?jql=project%3D'+projectExternalId+'%26issuetype%20in%20(Bug%2C%20Story)&maxResults=10000&fields=id%2Ckey%2Cissuetype%2Cdescription%2Csummary%2Cstatus';
         console.debug('Calling url: ', url);
         return url;
     },
@@ -155,8 +155,24 @@ var copadoJIRAAdapter = {
             us[app.conf.ns+'Functional_Specifications__c'] = obj.fields.description;
 
             return us;
+        } else if (obj.fields.issuetype.name == 'Bug'){
 
-        }else{
+            var app = this.controller;    
+
+            //Create the SObject instance
+            var bug = new sforce.SObject(app.conf.ns+'User_Story__c');
+            //set the external Id
+            bug.External_Id__c = obj.id;        
+
+            //set the fields 
+            bug[app.conf.ns+'User_Story_Title__c'] = obj.key + ' - ' + obj.fields.summary;
+            bug[app.conf.ns+'Status__c'] = obj.fields.status.name;
+            bug[app.conf.ns+'Project__c'] = app.data.projectId;
+            bug[app.conf.ns+'Functional_Specifications__c'] = obj.fields.description;
+
+            return bug;
+
+        } else {
             return false;
         }
     }    
