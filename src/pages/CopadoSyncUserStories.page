@@ -128,7 +128,47 @@ var copadoJIRAAdapter = {
      * @return {[type]}     [description]
      */
     getIssueList : function(res){
-        return res.issues;
+        //startAt: 0, maxResults: 50, total: 110, issues: Array(50)
+        var startIndex = res.startAt;
+        var TotalResultCount = res.total;
+        var tmpResults = res.issues;
+
+        while(tmpResults.length < TotalResultCount){
+            startIndex = tmpResults.length;
+            var _url = app.adapter.getUrl(projectExternalId)+'&startAt='+startIndex;
+            console.log('Calling url: '+_url);
+            console.info(startIndex, TotalResultCount, tmpResults.length);
+            sforce.connection.remoteFunction({
+                async: false,
+                url: _url,
+                requestHeaders: app.adapter.getHeaders(),
+                method: app.adapter.getMethod(),
+                requestData: app.adapter.getBody(),
+
+                onSuccess : function(_res) {
+                    try{
+                        _res = app.adapter.parseAPIResponse(_res);
+                    }catch(e){
+                        console.error(e);
+                        alert(app.labels.UNEXPECTED_API_RESPONSE);
+                        return;
+                    }
+                    console.info('Current length: '+tmpResults.length);
+                    console.info('New retrieval length: '+_res.issues.length);
+                    Array.prototype.push.apply(tmpResults, _res.issues);
+                    console.info('New length: '+tmpResults.length);
+                },
+
+                onFailure : function(_res, request) {
+                    console.error(_res, request);
+                    app.adapter.onFailure(_res,request);
+                    app.hideScreenLocker();
+                },
+                timeout: 25000
+            });
+        }
+        console.info('Returning results'+tmpResults.length);
+        return tmpResults;
     },
     /**
      * FIELD MAPPINGS - JIRA
