@@ -1,4 +1,4 @@
-# 05-09-2018 Update:
+# Copado Integrations v1.13 Update - 05-09-2018
 - Bugfix: Jira retrieve was limited to 50 records. Now it supports the retrieve of all Jira stories.
 - Upgrade instructions: clone or download this repository. Deploy the CopadoSyncUserStories VF page to your Copado Integrations Org.
 
@@ -23,8 +23,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgjT
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000NgjT
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Nh91
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Nh91
 
 # Customisation
 In order to customise the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS" in the CopadoSyncUserStories Visualforce page.
