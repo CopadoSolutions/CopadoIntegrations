@@ -1,3 +1,7 @@
+# 05-09-2018 Update:
+- Bugfix: Jira retrieve was limited to 50 records. Now it supports the retrieve of all Jira stories.
+- Upgrade instructions: clone or download this repository. Deploy the CopadoSyncUserStories VF page to your Copado Integrations Org.
+
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
