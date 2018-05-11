@@ -67,9 +67,10 @@ public class JiraIssueFetcher_Batch_Test  {
             proj2.External_Id__c = 'DC2';
             insert proj2;
             
-            ObjectPermissions ucPerm = [SELECT Id, ParentId FROM ObjectPermissions WHERE SObjectType = 'copado__User_Story__c' AND PermissionsRead = true LIMIT 1];
-            PermissionSetAssignment ucPSA = new PermissionSetAssignment(PermissionSetId = ucPerm.ParentId, AssigneeId = u.Id);
-            insert ucPSA;
+            ObjectPermissions usPerm = [SELECT Id, ParentId FROM ObjectPermissions WHERE SObjectType = 'copado__User_Story__c' AND PermissionsRead = true LIMIT 1];
+            List<PermissionSet> permissionSetList = [SELECT Id FROM PermissionSet WHERE Id = :usPerm.ParentId AND IsOwnedbyProfile=false Limit 1];
+            PermissionSetAssignment ucPSA = new PermissionSetAssignment(PermissionSetId = permissionSetList[0].id, AssigneeId = u.Id);
+            insert ucPSA; 
             
             copado__Epic__c e = new copado__Epic__c(copado__Epic_Title__c='Test epic', JIRA_Key__c = 'ZZ-1');
             insert e;
