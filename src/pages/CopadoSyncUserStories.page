@@ -204,6 +204,222 @@ var copadoJIRAAdapter = {
 };
 
 /**************************************************************************************************************
+ * Copado Adapter to Microsoft Team Services
+ *
+ * This class contains the basic methods to be called by the controller class
+ * These methods are called in order to retrieve and convert external User Stories into Copado User Stories
+ *
+ * If you want to write your custom adapter, you will only have to extend this object and overide the methods you need.
+ * @type {Object}
+ */
+var copadoVSTSAdapter = {
+
+    /**
+     * This method should return the body data to send in POST messages.
+     * @return {[type]} [description]
+     */
+    getBody: function(){ return {} },
+
+    /**
+     * This method returns the absolute url to call the API method
+     *
+     * IMPORTANT: remember that this domain needs to be set in Salesforce > Setup > Remote Sites
+     *
+     * @param  {[type]} projectExternalId [description]
+     * @return {[type]}                   [description]
+     */
+    getUrl: function(projectExternalId){
+        var app = this.controller;
+        var url = app.data.credential.endpoint +projectExternalId+'/_apis/wit/wiql/'+workspaceId+'?api-version=4.1';
+        console.debug('Calling url: ', url);
+        return url;
+    },
+    /**
+     * This method returns the request method for the adapter
+     * @return {[type]} [description]
+     */
+    getMethod: function(){
+        return 'GET';
+    },
+    /**
+     * Should return the request header
+     * You have to override this method if you need to change from Basic Authentication to other type,
+     * or if you need to add additional headers
+     * @return {[type]} [description]
+     */
+    getHeaders: function(){
+        var app = this.controller;
+        return {
+           "Content-Type": "application/json",
+           "Authorization": app.makeBasicAuthenticationHeader("",app.data.credential.password)
+        };
+    },
+    /**
+     * Parse API Response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    parseAPIResponse: function(res){
+        return JSON.parse(res);
+    },
+    /**
+     * Failure handler
+     * @param  {[type]} res     [description]
+     * @param  {[type]} request [description]
+     * @return {[type]}         [description]
+     */
+    onFailure : function(res, request) {
+
+        var app = this.controller;
+        console.error(res, request);
+        if(request.status == 401){
+            alert(app.labels.LOGIN_ERROR);
+        }else{
+            try{
+                //try to parse and show the remote error
+                res = JSON.parse(res);
+            }catch(e){ res = false;}
+            var app = this.controller;
+            alert(res&&res.errorMessages&&res.errorMessages.length&&res.errorMessages[0]||app.labels.UNEXPECTED_ERROR_ON+app.data.credential.externalSystem);
+        }
+    },
+    /**
+     * Returns the list of issues from the API response
+     * @param  {[type]} res [description]
+     * @return {[type]}     [description]
+     */
+    getIssueList : function(res){
+        console.log('get vsts issueList',res);
+        var workItems = res.workItems;
+        var fields = res.columns;
+        var tmpResults = [];
+        var ids = [],
+            columns = [];
+        for (var i = 0; i < workItems.length; i++) {
+            ids.push(workItems[i].id);
+        }
+        for (var j = 0; j < fields.length; j++) {
+            columns.push(fields[j].referenceName);
+        }
+        console.log('id Array',ids,ids.join());
+        console.log('columns Array',columns,columns.join());
+        var vstsWorkItemIds = ids.join();
+        if(!vstsWorkItemIds){
+            return;
+        }
+        var workItemDetailsURL = app.data.credential.endpoint +projectExternalId+'/_apis/wit/workitems?ids='+vstsWorkItemIds;
+        if(!columns){
+            workItemDetailsURL+='&fields='+columns.join()
+        }
+        console.log(workItems.length);
+        workItemDetailsURL+='&api-version=4.1';
+        console.log('workItemDetailsURL',workItemDetailsURL);
+        sforce.connection.remoteFunction({
+            url : workItemDetailsURL,
+            requestHeaders: app.adapter.getHeaders(),
+            method: app.adapter.getMethod(),
+            requestData: app.adapter.getBody(),
+
+            onSuccess : function(_res) {
+                try{
+                     _res = app.adapter.parseAPIResponse(_res);
+                     console.log('_res vsts parsed',_res);
+                     if(_res.value.length){
+                        var len = _res.value.length;
+                        var records = [];
+                        while(len--){
+                            var obj = app.adapter.getCopadoUserStoryFromAPIObject(_res.value[len]);
+                            obj && records.push(obj);
+                        }
+
+                        console.log(records, records.length);
+
+                        // this will insert or update a Issue or User Story
+                        var batch = [];
+                        var batchNumber = 1;
+                        var batchSize = 200;
+                        var tmp = [];
+                        for(var i=0; i<records.length; i++){
+                            if(tmp.length == batchSize){
+                                batch[batchNumber] = tmp;
+                                tmp = [];
+                                batchNumber++;
+                            }
+                            tmp.push(records[i]);
+                        }
+                        batch[batchNumber] = tmp;
+
+                        console.log('Batch size: '+batchNumber);
+                        for(var j=1; j<=batchNumber; j++){
+                            var result = sforce.connection.upsert('External_Id__c', batch[j]);
+                            console.log('upsert result: ', result);
+                            var errors = "";
+                            for (var i=0; i<result.length; i++) {
+                              if (!result[i].getBoolean("success")) {
+                                errors += result[i].errors.message +"\n";
+                              }
+                            }
+                        }
+                        if(errors == ""){
+                          alert(app.labels.SUCCESS_SYNC);
+                            window.location.href = "/{!copado__Project__c.Id}";
+                        }
+                        else{
+                          alert(errors);
+                          app.hideScreenLocker();
+                        }
+                    }else{
+                        alert(app.labels.EMPTY_SYNC);
+                        app.hideScreenLocker();
+                    }
+
+                }catch(e){
+                    console.error('workItem retrieval error',e);
+                    alert(app.labels.UNEXPECTED_API_RESPONSE);
+                    return;
+                }
+            },
+
+            onFailure : function(res, request) {
+                debugger;
+                console.error(res, request);
+                app.adapter.onFailure(res,request);
+                app.hideScreenLocker();
+            },
+            timeout: 25000
+        });
+
+        console.debug('tmpResults',tmpResults);
+        return tmpResults;
+    },
+    /**
+     * FIELD MAPPINGS - VSTS
+     * This method should transform the API issue to a Copado User Story
+     * Notice that the Copado object should contain the package namespace
+     * @param  {[type]} obj [description]
+     * @return {[type]}     [description]
+     */
+    getCopadoUserStoryFromAPIObject : function(obj){
+            console.log('obj',obj);
+            var app = this.controller;
+
+            //Create the SObject instance
+            var us = new sforce.SObject(app.conf.ns+'User_Story__c');
+            //set the external Id
+            us.External_Id__c = obj.id;
+
+            //set the fields
+            us[app.conf.ns+'User_Story_Title__c'] = obj.fields["System.Title"];
+            us[app.conf.ns+'Status__c'] = obj.fields["System.State"];
+            us[app.conf.ns+'Project__c'] = app.data.projectId;
+            us[app.conf.ns+'Functional_Specifications__c'] = obj.fields["System.Reason"];
+
+            return us;
+    }
+
+};
+
+/**************************************************************************************************************
  * Copado Agile Accelerator Adapter
  * 
  * This class contains the basic methods to be called by the controller class
@@ -840,7 +1056,8 @@ var app = {
             'Rally': copadoRALLYAdapter,
             'Agile Accelerator': copadoAAAdapter,
             'ScrumDo': copadoScrumDoAdapter,
-            'Targetprocess': copadoTargetprocessAdapter
+            'Targetprocess': copadoTargetprocessAdapter,
+            'Visual Studio Team Services': copadoVSTSAdapter
         },
         CREDENTIAL_SFDC_OBJECT : 'Change_Management_Integration_Credential__c',
         ns: 'copado__'
@@ -919,7 +1136,6 @@ var app = {
                     method: credential.Authentication_Method__c, 
                     endpoint: credential.Endpoint__c
                 };
-                console.log('Credentials ', app.data.credential)
             }
         }catch(e){
             //In case of an error during the query process, just alert the user and end the process
@@ -941,8 +1157,9 @@ var app = {
      */
     retrieveFromPMAPI: function(projectExternalId){
         console.log('Retrieving from PM API');
-
-        // use sforce proxy to access 
+        console.log('request headers',app.adapter.getHeaders());
+        console.log('request body',app.adapter.getBody());
+        // use sforce proxy to access
         sforce.connection.remoteFunction({
             url : app.adapter.getUrl(projectExternalId),
             requestHeaders: app.adapter.getHeaders(),
@@ -951,6 +1168,7 @@ var app = {
 
             onSuccess : function(res) {
                 try{
+                    console.log('success res',res);
                     res = app.adapter.parseAPIResponse(res);
                 }catch(e){
                     console.error(e);
@@ -995,54 +1213,56 @@ var app = {
     convertToCopadoUserStory: function(res){
         try{
             var records = [],
-            issues = app.adapter.getIssueList(res),
-            len = issues.length;
+            issues = app.adapter.getIssueList(res);
+            if(app.data.Type !== 'Visual Studio Team Services'){
+                var len = issues.length;
+                console.log('issues[len]',issues,len,issues[len]);
+                while(len--){
+                    var obj = app.adapter.getCopadoUserStoryFromAPIObject(issues[len]);
+                    obj && records.push(obj);
+                }
 
-            while(len--){
-                var obj = app.adapter.getCopadoUserStoryFromAPIObject(issues[len]);
-                obj && records.push(obj);
-            }
+                console.log(records, records.length);
 
-            console.log(records, records.length);
-        
-            if(records.length){
-                // this will insert or update a Issue or User Story
-                var batch = [];
-                var batchNumber = 1;
-                var batchSize = 200;
-                var tmp = [];
-                for(var i=0; i<records.length; i++){
-                    if(tmp.length == batchSize){
-                        batch[batchNumber] = tmp;
-                        tmp = [];
-                        batchNumber++;   
+                if(records.length){
+                    // this will insert or update a Issue or User Story
+                    var batch = [];
+                    var batchNumber = 1;
+                    var batchSize = 200;
+                    var tmp = [];
+                    for(var i=0; i<records.length; i++){
+                        if(tmp.length == batchSize){
+                            batch[batchNumber] = tmp;
+                            tmp = [];
+                            batchNumber++;
+                        }
+                        tmp.push(records[i]);
                     }
-                    tmp.push(records[i]);
-                }
-                batch[batchNumber] = tmp;
+                    batch[batchNumber] = tmp;
 
-                console.log('Batch size: '+batchNumber);
-                for(var j=1; j<=batchNumber; j++){
-                    var result = sforce.connection.upsert('External_Id__c', batch[j]);
-                    console.log('upsert result: ', result);
-                    var errors = "";
-                    for (var i=0; i<result.length; i++) {
-                      if (!result[i].getBoolean("success")) {
-                        errors += result[i].errors.message +"\n";
-                      }
+                    console.log('Batch size: '+batchNumber);
+                    for(var j=1; j<=batchNumber; j++){
+                        var result = sforce.connection.upsert('External_Id__c', batch[j]);
+                        console.log('upsert result: ', result);
+                        var errors = "";
+                        for (var i=0; i<result.length; i++) {
+                          if (!result[i].getBoolean("success")) {
+                            errors += result[i].errors.message +"\n";
+                          }
+                        }
                     }
+                    if(errors == ""){
+                      alert(app.labels.SUCCESS_SYNC);
+                        window.location.href = "/{!copado__Project__c.Id}";
+                    }
+                    else{
+                      alert(errors);
+                      app.hideScreenLocker();
+                    }
+                }else{
+                    alert(app.labels.EMPTY_SYNC);
+                    app.hideScreenLocker();
                 }
-                if(errors == ""){
-                  alert(app.labels.SUCCESS_SYNC);
-                    window.location.href = "/{!copado__Project__c.Id}";
-                }
-                else{
-                  alert(errors);
-                  app.hideScreenLocker();
-                }
-            }else{
-                alert(app.labels.EMPTY_SYNC);
-                app.hideScreenLocker();
             }
         }
         catch(e){
@@ -1050,9 +1270,9 @@ var app = {
             console.error(e);
             console.error('Response was: ', res);
             app.hideScreenLocker();
-        }   
+        }
     },
-    
+
     /**
      * Validate and Retrieve User Stories
      * @param  {[type]} credentialId      [description]
