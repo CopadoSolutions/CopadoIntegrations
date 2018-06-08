@@ -1,3 +1,7 @@
+# Copado Integrations v1.15 Update - 06-08-2018
+- Added support for Microsoft VSTS
+- Upgrade instructions: Deploy the CopadoSyncUserStories VF page to your Copado Integrations Org and add "Visual Studio Team Services" as a picklist value for the External_System__c field. Add your MS VSTS domain name as a Remote Site Setting.
+
 # Copado Integrations v1.13 Update - 05-09-2018
 - Bugfix: Jira retrieve was limited to 50 records. Now it supports the retrieve of all Jira stories.
 - Upgrade instructions: clone or download this repository. Deploy the CopadoSyncUserStories VF page to your Copado Integrations Org.
@@ -23,8 +27,8 @@ By default the following fields get imported:
 
 # Installation instructions
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Nh91
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t24000000Nh91
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000Exg3
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000Exg3
 
 # Customisation
 In order to customise the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS" in the CopadoSyncUserStories Visualforce page.
@@ -51,6 +55,11 @@ This is done from the "Change Management Integrations" tab.
 - A TargetProccess endpoint might look as follows: https://contractor.tpondemand.com. 
 - For Agile Accelerator even username and password are required, those fields are not used since current sessionId will be used instead. Please fill any text, such as N/A. Make sure that the Authentincation Method is set to "Authentication Token"
 - For Agile Accelerator the Project External Id field is match against the Product tag name so that only Work records for that product tag are imported against the Copado Project. This can be customizable as well.
+- A Microsoft VSTS endpoint might look as follows: https://COMPANY_DOMAIN_NAME.visualstudio.com/
+- A new VSTS access token has to be generated in the following menu: User > Security > Access token.
+- VSTS uses basic authentication, where the Username is the user's email, and the access token generated above is the Password.
+- In VSTS a Query has to be used or generated. The fields retrieved in the query must match the field mappings in Copado Integrations. You will find the Queries in the following menu: Work > Queries > Open Issues > Column options.
+- The above Query's Id (found in the address bar as a parameter) must be set as "Workspace Id" in the Copado Project.
 
 Once the integration credentials have been setup, you will need to create a new project or edit an existing project and complete the following two fields.
 
