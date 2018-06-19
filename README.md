@@ -1,3 +1,7 @@
+# New Bi-directionaly sync support - 06-19-2018
+- JIRA and Microsoft VSTS providers have been ported to our new bi-directional integration project, where we expect to move all providers and deprecate this one. You can find it here: https://github.com/CopadoSolutions/ccm-integration
+
+
 # Copado Integrations v1.15 Update - 06-08-2018
 - Added support for Microsoft VSTS
 - Upgrade instructions: Deploy the CopadoSyncUserStories VF page to your Copado Integrations Org and add "Visual Studio Team Services" as a picklist value for the External_System__c field. Add your MS VSTS domain name as a Remote Site Setting.
@@ -9,9 +13,7 @@
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
-The latest version supports JIRA, VersionOne, Rally, Agile Accelerator, ScrumDo and TargetProcess.
-
-JIRA and Microsoft VSTS providers have been ported to our new bi-directional integration project, where we expect to move all providers and deprecate this one. You can find it here: https://github.com/CopadoSolutions/ccm-integration
+The latest version supports VersionOne, Rally, Agile Accelerator, ScrumDo and TargetProcess.
 
 # How does it work?
 Copado Solutions has built the authentication module as well as the framework for retrieving user stories and inserting these into the Copado sObject called, "User Story".  The mapping is also handled by the integration.  Both the data being queried from the data source as well as the mapping can be modified.  We have commented the code with instructions to help with the customisation process.
