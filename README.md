@@ -1,4 +1,4 @@
-# New Bi-directionaly sync support - 06-19-2018
+# New Bi-directional sync support - 06-19-2018
 - JIRA and Microsoft VSTS providers have been ported to our new bi-directional integration project, where we expect to move all providers and deprecate this one. You can find it here: https://github.com/CopadoSolutions/ccm-integration
 
 
