@@ -9,7 +9,9 @@
 # Copado Integrations
 Easily integrate your external project management system with Copado.  This repository will hold the base layer of the integration code that may be extended by the community.
 
-The latest version supports JIRA, VersionOne, Rally, Agile Accelerator, ScrumDo and TargetProcess
+The latest version supports JIRA, VersionOne, Rally, Agile Accelerator, ScrumDo and TargetProcess.
+
+JIRA and Microsoft VSTS providers have been ported to our new bi-directional integration project, where we expect to move all providers and deprecate this one. You can find it here: https://github.com/CopadoSolutions/ccm-integration
 
 # How does it work?
 Copado Solutions has built the authentication module as well as the framework for retrieving user stories and inserting these into the Copado sObject called, "User Story".  The mapping is also handled by the integration.  Both the data being queried from the data source as well as the mapping can be modified.  We have commented the code with instructions to help with the customisation process.
