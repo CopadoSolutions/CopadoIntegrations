@@ -1,3 +1,7 @@
+# Copado Integrations v1.16 Update - 04-02-2020
+- Updated the JQuery library version.
+- Upgrade instructions: Deploy only the CopadoSyncUserStories VF page to your Copado Integrations Org.
+
 # New Bi-directional sync support - 06-19-2018
 - JIRA and Microsoft VSTS providers have been ported to our new bi-directional integration project, where we expect to move all providers and deprecate this one. You can find it here: https://github.com/CopadoSolutions/ccm-integration
 
@@ -29,10 +33,10 @@ By default the following fields get imported:
 - Project (Project__c)
 - Functional Specifications (Functional_Specifications__c)
 
-# Installation instructions
+# Installation instructions (v1.16)
 To install the application use one of the below URLs.
-- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000Exg3
-- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000Exg3
+- Production/Developer orgs: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000ExhG
+- Sandbox orgs: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1p000000ExhG
 
 # Customisation
 In order to customise the mappings for the fields being retrieved, you will need to search for the section in the code labelled, "FIELD MAPPINGS" in the CopadoSyncUserStories Visualforce page.
