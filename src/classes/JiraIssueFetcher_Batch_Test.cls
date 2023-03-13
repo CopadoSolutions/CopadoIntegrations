@@ -28,7 +28,7 @@ public class JiraIssueFetcher_Batch_Test  {
         );
         insert u;    
         User u2 = new User(
-             ProfileId = [SELECT Id FROM Profile WHERE Name = 'Read Only'].Id,
+             ProfileId = [SELECT Id FROM Profile WHERE Name LIKE 'Minimum Access%' LIMIT 1].Id,
              LastName = 'last',
              Email = 'user.has.no.access@example.com',
              Username = 'user.has.no.access@example.com' + System.currentTimeMillis(),
