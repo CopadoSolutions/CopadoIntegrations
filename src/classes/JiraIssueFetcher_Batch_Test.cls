@@ -28,7 +28,7 @@ public class JiraIssueFetcher_Batch_Test  {
         );
         insert u;    
         User u2 = new User(
-             ProfileId = [SELECT Id FROM Profile WHERE Name = 'Read Only'].Id,
+             ProfileId = [SELECT Id FROM Profile WHERE Name LIKE 'Minimum Access%' LIMIT 1].Id,
              LastName = 'last',
              Email = 'user.has.no.access@example.com',
              Username = 'user.has.no.access@example.com' + System.currentTimeMillis(),
@@ -67,7 +67,7 @@ public class JiraIssueFetcher_Batch_Test  {
             proj2.External_Id__c = 'DC2';
             insert proj2;
             
-            ObjectPermissions usPerm = [SELECT Id, ParentId FROM ObjectPermissions WHERE SObjectType = 'copado__User_Story__c' AND PermissionsRead = true LIMIT 1];
+            ObjectPermissions usPerm = [SELECT Id, ParentId FROM ObjectPermissions WHERE SObjectType = 'copado__User_Story__c' AND PermissionsRead = true AND Parent.Name = 'Copado_User' LIMIT 1];
             List<PermissionSet> permissionSetList = [SELECT Id FROM PermissionSet WHERE Id = :usPerm.ParentId AND IsOwnedbyProfile=false Limit 1];
             PermissionSetAssignment ucPSA = new PermissionSetAssignment(PermissionSetId = permissionSetList[0].id, AssigneeId = u.Id);
             insert ucPSA; 
